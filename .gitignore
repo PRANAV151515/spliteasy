@@ -1,0 +1,21 @@
+# Java / Maven
+target/
+*.class
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (kabhi push mat karna)
+.env
+application-local.properties
+
+# Frontend (baad ke liye)
+node_modules/
+dist/
