@@ -1,8 +1,7 @@
 package com.spliteasy.backend.user;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -13,20 +12,21 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<User> register(@Valid @RequestBody UserRequest request) {
-        return ResponseEntity.ok(userService.register(request));
+    @GetMapping("/me")
+    public UserResponse me(Authentication authentication) {
+        return UserResponse.from(userService.getByEmail(authentication.getName()));
     }
 
     @GetMapping
-    public List<User> getAll() {
-        return userService.getAllUsers();
+    public List<UserResponse> getAll() {
+        return userService.getAllUsers().stream().map(UserResponse::from).toList();
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable Long id) {
-        return userService.getById(id);
+    public UserResponse getById(@PathVariable Long id) {
+        return UserResponse.from(userService.getById(id));
     }
 }
+
 
 
