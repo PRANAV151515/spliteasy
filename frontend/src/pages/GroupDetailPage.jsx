@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../api/client";
 import Navbar from "../components/Navbar";
+import Select from "../components/Select";
 
 const SPLIT_LABELS = { EQUAL: "Equal", EXACT: "Exact amounts", PERCENTAGE: "Percentage" };
 const money = (n) => Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const initial = (name) => name.charAt(0).toUpperCase();
+
 
 export default function GroupDetailPage() {
   const { id } = useParams();
@@ -108,16 +109,21 @@ export default function GroupDetailPage() {
                   <input type="number" step="0.01" min="0.01" placeholder="Amount (₹)" value={amount} onChange={(e) => setAmount(e.target.value)} required />
                 </div>
                 <div className="row">
-                  <label className="field">Paid by
-                    <select value={paidBy} onChange={(e) => setPaidBy(e.target.value)}>
-                      {group.members.map((m) => (<option key={m.id} value={m.id}>{m.name}</option>))}
-                    </select>
-                  </label>
-                  <label className="field">Split type
-                    <select value={splitType} onChange={(e) => setSplitType(e.target.value)}>
-                      {Object.entries(SPLIT_LABELS).map(([k, v]) => (<option key={k} value={k}>{v}</option>))}
-                    </select>
-                  </label>
+                  
+                  <div className="field">Paid by
+                  <Select
+                      value={paidBy}
+                      onChange={setPaidBy}
+                      options={group.members.map((m) => ({ value: String(m.id), label: m.name }))}
+                    />
+                  </div>
+                  <div className="field">Split type
+                    <Select
+                      value={splitType}
+                      onChange={setSplitType}
+                      options={Object.entries(SPLIT_LABELS).map(([k, v]) => ({ value: k, label: v }))}
+                    />
+                  </div>
                 </div>
 
                 {splitType !== "EQUAL" && (
@@ -127,7 +133,7 @@ export default function GroupDetailPage() {
                     </span>
                     {group.members.map((m) => (
                       <div key={m.id} className="split-row">
-                        <span className="avatar">{initial(m.name)}</span>
+                        
                         <span>{m.name}</span>
                         <input type="number" step="0.01" placeholder={splitType === "EXACT" ? "₹ 0.00" : "0 %"}
                           value={splitValues[m.id] || ""}
@@ -151,7 +157,7 @@ export default function GroupDetailPage() {
                 <ul className="list">
                   {expenses.map((x) => (
                     <li key={x.id} className="list-item">
-                      <span className="avatar">{initial(x.paidBy.name)}</span>
+                      
                       <div className="grow">
                         <div className="item-title">{x.description}</div>
                         <div className="item-sub">Paid by {x.paidBy.name} · {SPLIT_LABELS[x.splitType]}</div>
@@ -173,7 +179,7 @@ export default function GroupDetailPage() {
                   const value = Number(b.balance);
                   return (
                     <li key={b.user.id} className="list-item">
-                      <span className="avatar">{initial(b.user.name)}</span>
+                      
                       <div className="grow">
                         <div className="item-title">{b.user.name}</div>
                         <div className="item-sub">{value > 0 ? "gets back" : value < 0 ? "owes" : "settled up"}</div>
@@ -211,7 +217,7 @@ export default function GroupDetailPage() {
               <ul className="list" style={{ marginBottom: 16 }}>
                 {group.members.map((m) => (
                   <li key={m.id} className="list-item">
-                    <span className="avatar">{initial(m.name)}</span>
+                    
                     <div className="grow">
                       <div className="item-title">{m.name}</div>
                       <div className="item-sub">{m.email}</div>

@@ -82,14 +82,14 @@ public class BalanceService {
 
     private Group findGroup(Long groupId) {
         return groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
     }
 
     private void checkMember(Group group, String email) {
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getEmail().equals(email));
         if (!isMember) {
-            throw new IllegalArgumentException("Tu is group ka member nahi hai");
+            throw new IllegalArgumentException("You are not a member of this group");
         }
     }
 }

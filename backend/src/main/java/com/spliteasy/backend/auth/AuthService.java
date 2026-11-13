@@ -20,7 +20,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Ye email already registered hai");
+            throw new IllegalArgumentException("This email is already registered");
         }
 
         User user = new User();
@@ -40,7 +40,7 @@ public class AuthService {
         );
 
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("User nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         String token = jwtService.generateToken(user.getEmail());
         return new AuthResponse(token, user.getName(), user.getEmail());

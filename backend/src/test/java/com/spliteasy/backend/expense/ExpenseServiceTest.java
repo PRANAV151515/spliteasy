@@ -107,7 +107,7 @@ class ExpenseServiceTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> expenseService.addExpense(1L, req, CALLER));
 
-        assertTrue(ex.getMessage().contains("barabar hona chahiye"));
+        assertTrue(ex.getMessage().contains("must equal"));
     }
 
     @Test

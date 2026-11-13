@@ -10,11 +10,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record ExpenseRequest(
-        @NotBlank(message = "Description required hai") String description,
-        @NotNull(message = "Amount required hai")
-        @DecimalMin(value = "0.01", message = "Amount 0 se zyada hona chahiye") BigDecimal amount,
-        @NotNull(message = "paidBy (payer ka userId) required hai") Long paidBy,
-        @NotNull(message = "splitType required hai") SplitType splitType,
+        @NotBlank(message = "Description is required") String description,
+        @NotNull(message = "Amount is required")
+        @DecimalMin(value = "0.01", message = "Amount must be greater than 0") BigDecimal amount,
+        @NotNull(message = "Payer is required") Long paidBy,
+        @NotNull(message = "Split type is required") SplitType splitType,
         LocalDate expenseDate,
         @Valid List<SplitInput> splits
 ) {}

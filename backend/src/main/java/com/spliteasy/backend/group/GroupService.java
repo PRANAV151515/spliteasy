@@ -49,10 +49,10 @@ public class GroupService {
         checkMember(group, currentEmail);
 
         User newMember = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Is email wala user register nahi hai"));
+                .orElseThrow(() -> new IllegalArgumentException("No registered user found with this email"));
 
         if (group.getMembers().contains(newMember)) {
-            throw new IllegalArgumentException("Ye user already group mein hai");
+            throw new IllegalArgumentException("This user is already in the group");
         }
 
         group.getMembers().add(newMember);
@@ -61,19 +61,19 @@ public class GroupService {
 
     private User findUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     private Group findGroup(Long groupId) {
         return groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
     }
 
     private void checkMember(Group group, String email) {
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getEmail().equals(email));
         if (!isMember) {
-            throw new IllegalArgumentException("Tu is group ka member nahi hai");
+            throw new IllegalArgumentException("You are not a member of this group");
         }
     }
 }
