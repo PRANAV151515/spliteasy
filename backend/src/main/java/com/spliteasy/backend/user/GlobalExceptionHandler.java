@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Email ya password galat hai"));
+                .body(Map.of("error", "Incorrect email or password"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

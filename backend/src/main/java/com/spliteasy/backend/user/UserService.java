@@ -16,12 +16,12 @@ public class UserService {
 
     public User getById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }
 

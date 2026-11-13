@@ -3,7 +3,7 @@ package com.spliteasy.backend.auth;
 import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-        @NotBlank(message = "Email required hai") String email,
-        @NotBlank(message = "Password required hai") String password
+        @NotBlank(message = "Email is required") String email,
+        @NotBlank(message = "Password is required") String password
 ) {}
 

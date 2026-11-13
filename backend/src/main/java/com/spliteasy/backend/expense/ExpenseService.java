@@ -32,11 +32,11 @@ public class ExpenseService {
 
         User payer = members.get(request.paidBy());
         if (payer == null) {
-            throw new IllegalArgumentException("Payer is group ka member nahi hai");
+            throw new IllegalArgumentException("The payer must be a member of this group");
         }
 
         if (request.amount().stripTrailingZeros().scale() > 2) {
-            throw new IllegalArgumentException("Amount mein sirf 2 decimal places allowed hain");
+            throw new IllegalArgumentException("Amount can have at most 2 decimal places");
         }
         BigDecimal amount = request.amount().setScale(2, RoundingMode.UNNECESSARY);
 
@@ -110,13 +110,13 @@ public class ExpenseService {
 
         for (SplitInput in : inputs) {
             if (in.value() == null || in.value().signum() <= 0) {
-                throw new IllegalArgumentException("Har member ka amount 0 se zyada hona chahiye");
+                throw new IllegalArgumentException("Har member ka Amount must be greater than 0");
             }
             if (in.value().stripTrailingZeros().scale() > 2) {
-                throw new IllegalArgumentException("Split amount mein sirf 2 decimal places allowed hain");
+                throw new IllegalArgumentException("Split Amount can have at most 2 decimal places");
             }
             if (result.containsKey(in.userId())) {
-                throw new IllegalArgumentException("Ek user do baar split mein nahi ho sakta");
+                throw new IllegalArgumentException("A user cannot appear twice in the split");
             }
             BigDecimal value = in.value().setScale(2, RoundingMode.UNNECESSARY);
             result.put(in.userId(), value);
@@ -126,7 +126,7 @@ public class ExpenseService {
 
         if (total.compareTo(amount) != 0) {
             throw new IllegalArgumentException(
-                    "Splits ka total (" + total + ") expense amount (" + amount + ") ke barabar hona chahiye");
+                    "The split total (" + total + ") must equal the expense amount (" + amount + ")");
         }
         return result;
     }
@@ -140,10 +140,10 @@ public class ExpenseService {
 
         for (SplitInput in : inputs) {
             if (in.value() == null || in.value().signum() <= 0) {
-                throw new IllegalArgumentException("Har member ka percentage 0 se zyada hona chahiye");
+                throw new IllegalArgumentException("Each member's percentage must be greater than 0");
             }
             if (percents.containsKey(in.userId())) {
-                throw new IllegalArgumentException("Ek user do baar split mein nahi ho sakta");
+                throw new IllegalArgumentException("A user cannot appear twice in the split");
             }
             percents.put(in.userId(), in.value());
             totalPercent = totalPercent.add(in.value());
@@ -151,7 +151,7 @@ public class ExpenseService {
         validateMembers(new ArrayList<>(percents.keySet()), members);
 
         if (totalPercent.compareTo(HUNDRED) != 0) {
-            throw new IllegalArgumentException("Percentages ka total 100 hona chahiye (abhi: " + totalPercent + ")");
+            throw new IllegalArgumentException("Percentages must add up to 100 (currently" + totalPercent + ")");
         }
 
         Map<Long, BigDecimal> result = new LinkedHashMap<>();
@@ -175,28 +175,28 @@ public class ExpenseService {
     // ---------- helpers ----------
     private void requireSplits(List<SplitInput> inputs) {
         if (inputs == null || inputs.isEmpty()) {
-            throw new IllegalArgumentException("Is split type ke liye splits dena zaroori hai");
+            throw new IllegalArgumentException("Splits are required for this split type");
         }
     }
 
     private void validateMembers(List<Long> ids, Map<Long, User> members) {
         for (Long id : ids) {
             if (!members.containsKey(id)) {
-                throw new IllegalArgumentException("User " + id + " is group ka member nahi hai");
+                throw new IllegalArgumentException("User " + id + " is not a member of this group");
             }
         }
     }
 
     private Group findGroup(Long groupId) {
         return groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group nahi mila"));
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
     }
 
     private void checkMember(Group group, String email) {
         boolean isMember = group.getMembers().stream()
                 .anyMatch(m -> m.getEmail().equals(email));
         if (!isMember) {
-            throw new IllegalArgumentException("Tu is group ka member nahi hai");
+            throw new IllegalArgumentException("You are not a member of this group");
         }
     }
 }

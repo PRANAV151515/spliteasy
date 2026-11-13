@@ -18,7 +18,7 @@ export default function Navbar() {
         <div className="nav-right">
           {name && (
             <>
-              <span className="avatar">{name.charAt(0).toUpperCase()}</span>
+              
               <span className="nav-name">{name}</span>
             </>
           )}
