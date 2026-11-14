@@ -15,6 +15,8 @@ import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import com.spliteasy.backend.payment.Payment;
+import com.spliteasy.backend.payment.PaymentRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ public class BalanceService {
 
     private final GroupRepository groupRepository;
     private final ExpenseRepository expenseRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional(readOnly = true)
     public List<BalanceResponse> getBalances(Long groupId, String currentEmail) {
@@ -75,6 +78,11 @@ public class BalanceService {
                 Long userId = split.getUser().getId();
                 users.putIfAbsent(userId, split.getUser());
                 balances.merge(userId, split.getAmount().negate(), BigDecimal::add);
+            }
+                    // settled payments: dene wale ka balance badhta hai, lene wale ka ghatta hai
+            for (Payment p : paymentRepository.findByGroupIdOrderByCreatedAtDesc(group.getId())) {
+            balances.merge(p.getFromUser().getId(), p.getAmount(), BigDecimal::add);
+            balances.merge(p.getToUser().getId(), p.getAmount().negate(), BigDecimal::add);
             }
         }
         return balances;
