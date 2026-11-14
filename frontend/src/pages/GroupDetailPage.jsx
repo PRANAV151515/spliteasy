@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../api/client";
 import Navbar from "../components/Navbar";
 import Select from "../components/Select";
+import Toast from "../components/Toast";
 
 const SPLIT_LABELS = { EQUAL: "Equal", EXACT: "Exact amounts", PERCENTAGE: "Percentage" };
 const money = (n) => Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -16,6 +17,10 @@ export default function GroupDetailPage() {
   const [settlements, setSettlements] = useState([]);
   const [memberEmail, setMemberEmail] = useState("");
   const [error, setError] = useState("");
+  const [toast, setToast] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [me, setMe] = useState(null);
+  const [settlingKey, setSettlingKey] = useState(null);
 
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
@@ -25,16 +30,21 @@ export default function GroupDetailPage() {
 
   const loadAll = async () => {
     try {
-      const [g, e, b, s] = await Promise.all([
+        const [g, e, b, s, p, u] = await Promise.all([
         api.get(`/groups/${id}`),
         api.get(`/groups/${id}/expenses`),
         api.get(`/groups/${id}/balances`),
         api.get(`/groups/${id}/settlements`),
+        api.get(`/groups/${id}/payments`),
+        api.get(`/users/me`),
       ]);
       setGroup(g.data);
       setExpenses(e.data);
       setBalances(b.data);
       setSettlements(s.data);
+      setPayments(p.data);
+      setMe(u.data);
+      
       if (!paidBy && g.data.members.length > 0) setPaidBy(String(g.data.members[0].id));
     } catch (err) {
       setError(err.response?.data?.error || "Unable to load group data.");
@@ -45,17 +55,24 @@ export default function GroupDetailPage() {
     loadAll();
   }, [id]);
 
-  const addMember = async (e) => {
+    const addMember = async (e) => {
     e.preventDefault();
     setError("");
     try {
       await api.post(`/groups/${id}/members`, { email: memberEmail });
+      setToast({ type: "success", title: "Member added", message: `${memberEmail} joined the group.` });
       setMemberEmail("");
       loadAll();
     } catch (err) {
-      setError(err.response?.data?.error || "Unable to add the member.");
+      const msg = err.response?.data?.error || "Unable to add the member.";
+      setToast({
+        type: "error",
+        title: msg.includes("No registered user") ? "User not found" : "Couldn't add member",
+        message: msg,
+      });
     }
   };
+
 
   const addExpense = async (e) => {
     e.preventDefault();
@@ -77,10 +94,25 @@ export default function GroupDetailPage() {
     }
   };
 
+  const markReceived = async (t) => {
+  const key = `${t.from.id}-${t.to.id}`;
+  setSettlingKey(key);
+  try {
+    await api.post(`/groups/${id}/payments`, { fromUserId: t.from.id, amount: t.amount });
+    setToast({ type: "success", title: "Payment recorded", message: `${t.from.name} paid ${t.to.name} ₹${money(t.amount)}.` });
+    loadAll();
+  } catch (err) {
+    setToast({ type: "error", title: "Couldn't record payment", message: err.response?.data?.error || "Something went wrong." });
+  } finally {
+    setSettlingKey(null);
+  }
+};
+
   if (!group) {
     return (
       <>
         <Navbar />
+        
         <div className="container">{error ? <div className="alert">{error}</div> : <p className="empty">Loading...</p>}</div>
       </>
     );
@@ -89,6 +121,7 @@ export default function GroupDetailPage() {
   return (
     <>
       <Navbar />
+      <Toast toast={toast} onClose={() => setToast(null)} />
       <div className="container">
         <Link to="/groups" className="back-link">← Back to groups</Link>
         <div className="page-head">
@@ -151,10 +184,19 @@ export default function GroupDetailPage() {
                 <h3>Expenses</h3>
                 <span className="badge">{expenses.length}</span>
               </div>
-              {expenses.length === 0 ? (
+              {expenses.length === 0 && payments.length === 0 ?  (
                 <p className="empty">No expenses yet. Add your first one above.</p>
               ) : (
                 <ul className="list">
+                    {payments.map((p) => (
+                    <li key={`pay-${p.id}`} className="list-item">
+                      <div className="grow">
+                        <div className="item-title">{p.from.name} paid {p.to.name}</div>
+                        <div className="item-sub">Settlement</div>
+                      </div>
+                      <span className="badge badge-green">Settled ₹{money(p.amount)}</span>
+                    </li>
+                  ))}
                   {expenses.map((x) => (
                     <li key={x.id} className="list-item">
                       
@@ -197,19 +239,30 @@ export default function GroupDetailPage() {
                 <p className="empty">🎉 Everyone is settled up.</p>
               ) : (
                 <ul className="list">
-                  {settlements.map((t, i) => (
-                    <li key={i} className="list-item">
-                      <div className="grow transfer">
-                        <strong>{t.from.name}</strong>
-                        <span className="arrow">pays</span>
-                        <strong>{t.to.name}</strong>
-                      </div>
-                      <span className="badge badge-green">₹{money(t.amount)}</span>
-                    </li>
-                  ))}
+                  {settlements.map((t) => {
+                    const key = `${t.from.id}-${t.to.id}`;
+                    const canMark = me && me.id === t.to.id;
+                    return (
+                      <li key={key} className="list-item settle-item">
+                        <div className="grow">
+                          <div className="transfer">
+                            <strong>{t.from.name}</strong>
+                            <span className="arrow">pays</span>
+                            <strong>{t.to.name}</strong>
+                          </div>
+                          <span className="badge badge-green">₹{money(t.amount)}</span>
+                        </div>
+                        {canMark && (
+                          <button className="btn btn-primary btn-sm" disabled={settlingKey === key} onClick={() => markReceived(t)}>
+                            {settlingKey === key ? "Saving..." : "Mark as received"}
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
-              <p className="hint" style={{ marginTop: 12 }}>Minimum number of payments needed to clear all debts.</p>
+              <p className="hint" style={{ marginTop: 12 }}>Only the person receiving the money can mark a payment as received.</p>
             </div>
 
             <div className="card">
